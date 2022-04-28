@@ -38,3 +38,25 @@ func EqualIfPresent(a string, b string) bool {
 	}
 	return a == b
 }
+
+// MapKeyEqual compared two keys of string map for equality
+func MapKeysEqual(a, b map[string]string) bool {
+	passed := make(map[string]string, 0)
+	f := func(a, b map[string]string) bool {
+		for k := range a {
+			if _, ok := passed[k]; ok {
+				continue
+			}
+			if _, ok := b[k]; !ok {
+				return false
+			}
+			passed[k] = ""
+		}
+		return true
+	}
+
+	if f(a, b) {
+		return f(b, a)
+	}
+	return false
+}
