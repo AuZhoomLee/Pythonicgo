@@ -1,8 +1,12 @@
 package string
 
 type Set struct {
-	value map[string]struct{}
+	value map[string]string
 	len   int64
+}
+
+func (s *Set) Len() int64 {
+	return s.len
 }
 
 func (s *Set) ToList() []string {
@@ -57,8 +61,14 @@ func (s *Set) HasAll(sl []string) bool {
 }
 
 func (s *Set) Add(idea string) *Set {
+	if idea == "" {
+		return s
+	}
+	if s.value == nil {
+		s.value = make(map[string]string)
+	}
 	if !s.Has(idea) {
-		s.value[idea] = struct{}{}
+		s.value[idea] = ""
 		s.len += 1
 	}
 	return s
