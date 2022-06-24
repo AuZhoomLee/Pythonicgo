@@ -30,7 +30,7 @@ func TestEqualIfPresent(t *testing.T) {
 
 func TestLeastOneExists(t *testing.T) {
 	var (
-		empty = []string{}
+		empty []string
 		a     = []string{"a"}
 	)
 	cases := []struct {
@@ -83,7 +83,7 @@ func TestMapKeyEqual(t *testing.T) {
 
 func TestToMap(t *testing.T) {
 	var (
-		empty = []string{}
+		empty []string
 		a     = []string{"a"}
 	)
 	cases := []struct {
@@ -107,7 +107,7 @@ func TestToMap(t *testing.T) {
 func TestInList(t *testing.T) {
 	var (
 		empty        = ""
-		emptyList    = []string{}
+		emptyList    []string
 		notEmptyList = []string{""}
 		a            = "a"
 		al           = []string{"a"}

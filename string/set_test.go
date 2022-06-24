@@ -19,13 +19,3 @@ func TestAdd(t *testing.T) {
 		t.Errorf("Name: Set.Add, Expected %v, got %v", s, v)
 	}
 }
-
-func TestDel(t *testing.T) {
-	var (
-		a = "a"
-		s Set
-	)
-
-	reflect.ValueOf(s).Set()
-
-}
