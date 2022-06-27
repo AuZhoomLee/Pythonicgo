@@ -76,14 +76,27 @@ func (l *List) PopN(n int) *List {
 	return l
 }
 
+func (l *List) Clear() *List {
+	if l.Len() > 0 {
+		*l = (*l)[:0]
+	}
+	return l
+}
+
 func (l *List) Insert(index int, overflow bool, values ...interface{}) *List {
-	if l.Len()-1 > index {
+	switch true {
+	case index >= l.Len():
 		if overflow {
 			l.Push(values)
 		}
-		return l
+	case 0 < index && index < l.Len():
+		tail := (*l)[index:]
+		head := (*l)[:index]
+		return head.Push(values).Push(tail)
+	case index == 0:
+		cp := (*l)[:]
+		l.Clear().Push(values).Push(cp)
 	}
-	// todo: insert in this list
 	return l
 }
 
