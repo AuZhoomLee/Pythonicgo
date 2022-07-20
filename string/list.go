@@ -10,6 +10,11 @@ const (
 
 type List []string
 
+func ToList(s []string) (l *List) {
+	l.Push(s)
+	return l
+}
+
 func (l List) Len() int {
 	return len(l)
 }
@@ -154,6 +159,56 @@ func (l *List) Remove(index int) *List {
 			*l = append((*l)[:index], (*l)[index+1:]...)
 		}
 	}
+	return l
+}
+
+func (l List) ToSet() map[string]struct{} {
+	s := make(map[string]struct{})
+	for _, i := range l {
+		s[i] = struct{}{}
+	}
+	return s
+}
+
+func (l List) ToSetWithIndex() map[string]int {
+	s := make(map[string]int)
+	for no, i := range l {
+		s[i] = no
+	}
+	return s
+}
+
+func (l *List) Delete(index int, values ...interface{}) *List {
+	f := func(v interface{}) {
+		var vm map[string]struct{}
+		switch v := v.(type) {
+		case []string:
+			vm = ToList(v).ToSet()
+		case List:
+			vm = v.ToSet()
+		}
+
+		left := make(List, len((*l)[index:]))
+		for _, i := range (*l)[index:] {
+			if _, ok := vm[i]; !ok {
+				left.Push(i)
+			}
+		}
+
+		*l = append((*l)[:index], left...)
+	}
+
+	fm := map[string]func(v interface{}){
+		TypeString: func(v interface{}) {
+			pos := (*l)[index:].Index(v.(string))
+			l.Remove(pos)
+		},
+		TypeSlice: f,
+		TypeList:  f,
+	}
+
+	l.DealWithFunc(fm, values)
+
 	return l
 }
 
