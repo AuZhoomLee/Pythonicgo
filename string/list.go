@@ -6,13 +6,25 @@ const (
 	TypeString = "string"
 	TypeSlice  = "[]string"
 	TypeList   = "List"
+	TypeOther  = "other"
 )
 
 type List []string
 
 func ToList(s []string) (l *List) {
-	l.Push(s)
-	return l
+	return l.Push(s)
+}
+
+func typeOf(v interface{}) string {
+	switch v.(type) {
+	case string:
+		return TypeString
+	case []string:
+		return TypeSlice
+	case List:
+		return TypeList
+	}
+	return TypeOther
 }
 
 func (l List) Len() int {
@@ -51,8 +63,15 @@ func (l *List) RemoveLast() *List {
 	return l
 }
 
-func (l List) Index(v string) int {
-	for no, i := range l {
+func (l List) Get(index int) (string, bool) {
+	if index >= 0 && index < l.Len() {
+		return l[index], true
+	}
+	return "", false
+}
+
+func (l List) IndexFirst(v string, index int) int {
+	for no, i := range l[index:] {
 		if i == v {
 			return no
 		}
@@ -77,14 +96,7 @@ func (l *List) Swapped(i, j int) *List {
 
 func (l *List) DealWithFunc(fm map[string]func(v interface{}), values ...interface{}) *List {
 	for _, v := range values {
-		switch v := v.(type) {
-		case string:
-			fm[TypeString](v)
-		case List:
-			fm[TypeList](v)
-		case []string:
-			fm[TypeSlice](v)
-		}
+		fm[typeOf(v)](v)
 	}
 	return l
 }
@@ -100,6 +112,7 @@ func (l *List) Push(values ...interface{}) *List {
 		TypeSlice: func(v interface{}) {
 			*l = append(*l, v.([]string)...)
 		},
+		TypeOther: func(v interface{}) {},
 	}, values)
 
 	return l
@@ -162,7 +175,7 @@ func (l *List) Remove(index int) *List {
 	return l
 }
 
-func (l List) ToSet() map[string]struct{} {
+func (l List) ToPlainMap() map[string]struct{} {
 	s := make(map[string]struct{})
 	for _, i := range l {
 		s[i] = struct{}{}
@@ -170,7 +183,7 @@ func (l List) ToSet() map[string]struct{} {
 	return s
 }
 
-func (l List) ToSetWithIndex() map[string]int {
+func (l List) ToMapWithIndex() map[string]int {
 	s := make(map[string]int)
 	for no, i := range l {
 		s[i] = no
@@ -183,9 +196,9 @@ func (l *List) Delete(index int, values ...interface{}) *List {
 		var vm map[string]struct{}
 		switch v := v.(type) {
 		case []string:
-			vm = ToList(v).ToSet()
+			vm = ToList(v).ToPlainMap()
 		case List:
-			vm = v.ToSet()
+			vm = v.ToPlainMap()
 		}
 
 		left := make(List, len((*l)[index:]))
@@ -200,11 +213,12 @@ func (l *List) Delete(index int, values ...interface{}) *List {
 
 	fm := map[string]func(v interface{}){
 		TypeString: func(v interface{}) {
-			pos := (*l)[index:].Index(v.(string))
+			pos := (*l)[index:].IndexFirst(v.(string), 0)
 			l.Remove(pos)
 		},
 		TypeSlice: f,
 		TypeList:  f,
+		TypeOther: func(v interface{}) {},
 	}
 
 	l.DealWithFunc(fm, values)
@@ -212,4 +226,46 @@ func (l *List) Delete(index int, values ...interface{}) *List {
 	return l
 }
 
-type OrderList []string
+type OrderList struct {
+	*List
+}
+
+func ToOrderList(s []string) (o *OrderList) {
+	return o.Push(s)
+}
+
+func (o *OrderList) Push(values ...interface{}) *OrderList {
+	var todo List
+	if length := len(values); length < 1 {
+		return o
+	} else {
+		todo = make(List, 0, length)
+	}
+
+	todo.Push(values).Sorted()
+	if o.IsEmpty() {
+		o.List = &todo
+		return o
+	}
+	backup := *(o.List)
+	o.Clear()
+
+	p, q := 0, 0
+	for p < backup.Len() || q < todo.Len() {
+		if backup[p] <= todo[q] {
+			*(o.List) = append(*(o.List), backup[p])
+			p++
+		} else {
+			*(o.List) = append(*(o.List), todo[q])
+			q++
+		}
+	}
+
+	if p < backup.Len() {
+		*(o.List) = append(*(o.List), backup[p:]...)
+		return o
+	}
+
+	*(o.List) = append(*(o.List), todo[q:]...)
+	return o
+}
